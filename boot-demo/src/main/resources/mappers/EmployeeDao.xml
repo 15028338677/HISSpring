@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--namespace设置对应接口的全限定名，用于完成xml与dao的绑定-->
+<mapper namespace="edu.nchu.bootdemo.dao.EmployeeDao">
+
+    <insert id="insert" >
+        insert into employee_info (
+            id,
+            username,
+            password,
+            name,
+            depart_id,
+            phone,
+            update_time,
+            del_flag
+        ) values (
+            #{id},
+            #{username},
+            #{password},
+            #{name},
+            #{department.id},
+            #{phone},
+            #{updateTime},
+            #{delFlag}
+        )
+    </insert>
+
+    <update id="update">
+        update employee_info
+        <set>
+            <if test="username!=null and username!=''">
+                username = #{username},
+            </if>
+            <if test="password!=null and password!=''">
+                password = #{password},
+            </if>
+            <if test="name!=null and name!=''">
+                name = #{name},
+            </if>
+            <if test="phone!=null and phone!=''">
+                phone = #{phone},
+            </if>
+            <if test="updateTime!=null">
+                update_time = #{updateTime},
+            </if>
+            <if test="department!=null and department.id!=null and department.id!=''">
+                depart_id = #{department.id}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+<!--  delete from employee_info where id = #{id}  -->
+<!--    将del_flag设置为1表示删除-->
+    <delete id="delete">
+        UPDATE employee_info SET del_flag = '1' WHERE id = #{id}
+    </delete>
+
+    <!--    <select id="findById" resultType="edu.nchu.bootdemo.model.Employee">-->
+    <!--        select-->
+    <!--            id,-->
+    <!--            username,-->
+    <!--            password,-->
+    <!--            name,-->
+    <!--            phone,-->
+    <!--            update_time as "updateTime",-->
+    <!--            del_flag delFlag-->
+    <!--        from employee_info where id = #{id}-->
+
+    <!--    </select>-->
+
+    <!--    id属性是resultmap 的名称 type指定映射javaBean的权限定名-->
+    <!--property 对应的是对象的属性名名称-->
+    <resultMap id="employeeMap" type="edu.nchu.bootdemo.model.Employee">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="name" column="name"/>
+        <result property="phone" column="phone"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="delFlag" column="del_flag"/>
+        <!--association用于一对一关联         -->
+        <association property="department" javaType="edu.nchu.bootdemo.model.Department">
+            <id property="id" column="depart_id"/>
+            <result property="departName" column="depart_name"/>
+            <result property="departCode" column="depart_code"/>
+        </association>
+    </resultMap>
+
+    <!--    表关联查询employee_info 和 depart_info-->
+    <select id="findById" resultMap="employeeMap">
+        SELECT
+            e.id,
+            e.username,
+            e.password,
+            e.name,
+            e.phone,
+            e.update_time,
+            e.del_flag,
+            e.depart_id,
+            d.depart_name,
+            d.depart_code
+        FROM employee_info e
+        LEFT JOIN depart_info d ON e.depart_id = d.id
+        WHERE e.id = #{id} AND e.del_flag = "0"
+    </select>
+
+    <select id="find" resultMap="employeeMap">
+        select
+        e.id,
+        e.username,
+        e.password,
+        e.name,
+        e.phone,
+        e.update_time,
+        e.del_flag,
+        e.depart_id,
+        d.depart_name,
+        d.depart_code
+        from employee_info e
+        LEFT join depart_info d on e.depart_id = d.id
+        <where>
+            <if test="username!=null and username!=''">
+                and e.username = #{username}
+            </if>
+            AND e.del_flag = "0"
+        </where>
+    </select>
+    <select id="findList" resultMap="employeeMap">
+        select
+        e.id,
+        e.username,
+        e.password,
+        e.name,
+        e.phone,
+        e.update_time,
+        e.del_flag,
+        e.depart_id,
+        d.depart_name,
+        d.depart_code
+        from employee_info e
+        LEFT join depart_info d on e.depart_id = d.id
+        <where>
+            <if test="username!=null and username!=''">
+                or e.username LIKE concat('%',#{username},'%')
+            </if>
+            <if test="name!=null and name!=''">
+                or e.name LIKE concat('%',#{name},'%')
+            </if>
+            <if test="phone!=null and phone!=''">
+                or e.phone LIKE concat('%',#{phone},'%')
+            </if>
+            <if test="department.departName!=null and department.departName!=''">
+                or d.depart_name LIKE concat('%',#{department.departName},'%')
+            </if>
+            AND e.del_flag = "0"
+        </where>
+    </select>
+</mapper>

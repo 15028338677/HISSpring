@@ -1,0 +1,66 @@
+
+###
+# 发送插入数据的请求
+POST http://localhost:18080/drug
+Content-Type: application/x-www-form-urlencoded;charset=utf-8
+
+drugCode=101&drugName=aaa&unit=a&price=12.5
+
+###
+# 发送更新数据的请求
+PUT http://localhost:8080/employee
+Content-Type: application/json;charset=utf-8
+
+{
+  "id": "10",
+  "username": "",
+  "password": "123456",
+  "name": "吴亦凡111",
+  "phone": "13813813338"
+}
+
+###
+# 根据id删除
+DELETE http://localhost:8080/employee/1234
+
+
+
+###
+# 根据id查询
+GET http://localhost:18080/drug/1
+
+
+
+###
+GET http://localhost:8080/mr/2020071300001
+
+
+###
+GET http://localhost:8081/mr/all
+
+
+###
+GET http://192.168.142.1:8081/mr/all
+
+
+###
+POST http://localhost:8080/mr/list
+Content-Type: application/json;charset=utf-8
+
+{
+  "gender": "男"
+}
+
+###
+POST http://localhost:8080/mr/page
+Content-Type: application/json;charset=utf-8
+
+{
+  "pageNum": 1,
+  "pageSize": 5
+}
+
+
+
+
+

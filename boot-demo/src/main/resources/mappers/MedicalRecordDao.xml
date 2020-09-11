@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--namespace设置对应接口的全限定名，用于完成xml与dao的绑定-->
+<mapper namespace="edu.nchu.bootdemo.dao.MedicalRecordDao">
+
+    <resultMap id="mrMap" type="edu.nchu.bootdemo.model.MedicalRecord">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="gender" property="gender"/>
+        <result column="age" property="age"/>
+        <result column="contract" property="contract"/>
+        <result column="operator_id" property="operatorId"/>
+        <association property="department" javaType="edu.nchu.bootdemo.model.Department">
+            <id column="depart_id" property="id"/>
+            <result column="depart_name" property="departName"/>
+        </association>
+        <association property="prescription" javaType="edu.nchu.bootdemo.model.Prescription">
+            <id column="pres_id" property="presId"/>
+            <result column="description" property="description"/>
+            <result column="mr_id" property="mrId"/>
+            <result column="status" property="status"/>
+            <result column="amount" property="amount"/>
+            <result column="contract" property="contract"/>
+            <result column="self_pay" property="selfPay"/>
+            <result column="pay_time" property="payTime"/>
+            <!--            <association property=""></association>-->
+            <collection property="presDetails" ofType="edu.nchu.bootdemo.model.PresDetail">
+                <id column="drug_info_id" property="drugInfoId"/>
+                <id column="pres_id" property="presId"/>
+                <result column="drug_count" property="drugCount"/>
+                <association property="drug" javaType="edu.nchu.bootdemo.model.Drug">
+                    <id column="drug_id" property="id"/>
+                    <result column="drug_name" property="drugName"/>
+                    <result column="drug_code" property="drugCode"/>
+                    <result column="unit" property="unit"/>
+                    <result column="price" property="price"/>
+                    <result column="stock" property="stock"/>
+                </association>
+            </collection>
+            <collection property="doctor" ofType="edu.nchu.bootdemo.model.Employee">
+                <id column="doctor_id" property="id"/>
+                <result column="doctor_name" property="username"/>
+            </collection>
+            <collection property="department" ofType="edu.nchu.bootdemo.model.Department">
+                <id column="depart_id" property="id"/>
+                <result column="depart_name" property="departName"/>
+            </collection>
+        </association>
+
+    </resultMap>
+
+    <!--    用于对sql片段进行抽象-->
+    <sql id="selectSql">
+          select
+                mr.id,
+                mr.name,
+                mr.gender,
+                mr.age,
+                mr.contract,
+                mr.operator_id,
+                mr.del_flag,
+                p.mr_id,
+                p.pres_id,
+                p.description,
+                p.status,
+                p.amount,
+                p.contract,
+                p.self_pay,
+                p.pay_time,
+                md.drug_info_id,
+                md.pres_id,
+                md.drug_count,
+                di.id "drug_id",
+                di.drug_name,
+                di.drug_code,
+                di.unit,
+                di.price,
+                di.stock,
+                ei.id doctor_id,
+                ei.name doctor_name,
+                dei.id depart_id,
+	            dei.depart_name
+            from  medical_record mr
+            left join prescription p on p.mr_id = mr.id
+            left join mr_drug md on md.pres_id = p.pres_id
+            left join drug_info di on di.id = md.drug_info_id
+            LEFT JOIN employee_info ei ON mr.doctor_id = ei.id
+	        LEFT JOIN depart_info dei ON mr.depart_id = dei.id
+    </sql>
+
+    <insert id="insert_to_prescription">
+        INSERT INTO prescription(
+            mr_id,
+            description,
+            update_time,
+            doctor_id,
+            pres_id,
+            status,
+            del_flag
+        )	VALUES(
+            #{id},
+            #{prescription.description},
+            #{updateTime},
+            #{prescription.doctor.id},
+            #{prescription.presId},
+            0,
+            0
+        );
+    </insert>
+    <insert id="insert_to_mr_drug">
+        INSERT INTO mr_drug(
+        drug_info_id,
+        pres_id,
+        drug_count
+        ) VALUES
+        <foreach collection="prescription.presDetails" item="item" index="index" separator=",">
+            (
+            #{item.drug.id},
+            #{prescription.presId},
+            #{item.drugCount}
+            )
+        </foreach>
+    </insert>
+    <!--    <select id="findById" resultMap="mrMap">-->
+    <!--        <include refid="selectSql"></include>-->
+    <!--        where mr.id = #{id}-->
+    <!--    </select>-->
+
+    <!--    <select id="findAll" resultMap="mrMap">-->
+    <!--        <include refid="selectSql"></include>-->
+    <!--    </select>-->
+
+    <!--    <select id="findList" resultMap="mrMap">-->
+    <!--        <include refid="selectSql"></include>-->
+    <!--        <where>-->
+    <!--            <if test="name!=null and name != ''">-->
+    <!--                and mr.name = #{name}-->
+    <!--            </if>-->
+    <!--            <if test="gender!=null and gender != ''">-->
+    <!--                and mr.gender = #{gender}-->
+    <!--            </if>-->
+    <!--            <if test="age!=null">-->
+    <!--                and mr.age = #{age}-->
+    <!--            </if>-->
+    <!--            <if test="contract!=null and contract != ''">-->
+    <!--                and mr.contract = #{contract}-->
+    <!--            </if>-->
+    <!--        </where>-->
+    <!--    </select>-->
+
+    <!--    pageHelper 在进行一对多或者多对多查询时会出现条目数不正确的情况-->
+    <select id="findList" resultType="edu.nchu.bootdemo.model.MedicalRecord">
+        select
+        mr.id,
+        mr.name,
+        mr.gender,
+        mr.age,
+        mr.contract,
+        mr.pay_status,
+        mr.pay_time,
+        mr.amount,
+        mr.self_paying
+        from medical_record mr
+        <where>
+            <if test="name!=null and name!=''">
+                and mr.name concat('%',#{name},'%')
+            </if>
+            <if test="gender!=null and gender!=''">
+                and mr.gender concat('%',#{gender},'%')
+            </if>
+            <if test="age!=null">
+                and mr.age concat('%',#{age},'%')
+            </if>
+            <if test="contract!=null and contract!=''">
+                and mr.contract concat('%',#{contract},'%')
+            </if>
+            <if test="id!=null and id!=''">
+                and mr.id concat('%',#{name},'%')
+            </if>
+        </where>
+    </select>
+
+    <resultMap id="mrByName" type="edu.nchu.bootdemo.model.MedicalRecord">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="gender" property="gender"/>
+        <result column="age" property="age"/>
+        <result column="contract" property="contract"/>
+        <result column="operator_id" property="operatorId"/>
+        <association property="department" javaType="edu.nchu.bootdemo.model.Department">
+            <id column="id" property="id"/>
+            <result column="depart_name" property="departName"/>
+        </association>
+    </resultMap>
+
+
+    <!--  挂号时插入数据 -->
+    <insert id="insert">
+        insert into medical_record (
+            id,
+            name,
+            gender,
+            age,
+            depart_id,
+            update_time,
+            del_flag
+        ) values (
+            #{id},
+            #{name},
+            #{gender},
+            #{age},
+            #{department.id},
+            #{updateTime},
+            #{delFlag}
+        )
+    </insert>
+
+    <select id="findById" resultMap="mrMap">
+        <include refid="selectSql"></include>
+        where mr.id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="mrMap">
+        <include refid="selectSql"></include>
+    </select>
+    <select id="findCondition" resultMap="mrMap">
+        <include refid="selectSql"></include>
+        <where>
+            <if test="name!=null and name!=''">
+                and mr.name LIKE concat('%',#{name},'%')
+            </if>
+            <if test="id!=null and id!=''">
+                and mr.id LIKE concat('%',#{id},'%')
+            </if>
+            <if test="operatorId!=null and operatorId!=''">
+                and mr.operator_id LIKE concat('%',#{operatorId},'%')
+            </if>
+            and p.status = "0"
+        </where>
+    </select>
+
+    <select id="findIsDrugCondition" resultMap="mrMap">
+        <include refid="selectSql"></include>
+        <where>
+            <if test="name!=null and name!=''">
+                and mr.name LIKE concat('%',#{name},'%')
+            </if>
+            <if test="id!=null and id!=''">
+                and mr.id LIKE concat('%',#{id},'%')
+            </if>
+            <if test="operatorId!=null and operatorId!=''">
+                and mr.operator_id LIKE concat('%',#{operatorId},'%')
+            </if>
+            and p.status = "1"
+        </where>
+    </select>
+
+
+    <!-- 同一个患者挂号只能开一次处方
+    根据id查询me表并且id不在prescription中-->
+    <select id="findByName" resultMap="mrByName">
+        select
+        mr.id,
+        mr.name,
+        mr.gender,
+        mr.age,
+        d.id depart_id,
+        d.depart_name
+        from medical_record mr
+        left join depart_info d on d.id = mr.depart_id
+        left join prescription p ON mr.id = p.mr_id
+        where p.mr_id is null and mr.name LIKE concat('%',#{name},'%')
+    </select>
+    <select id="findByPresId" resultMap="mrByName">
+        select
+        mr.id,
+        mr.name,
+        mr.gender,
+        mr.age,
+        d.id depart_id,
+        d.depart_name
+        from medical_record mr
+         left join depart_info d on d.id = mr.depart_id
+        left join prescription p ON mr.id = p.mr_id
+        where p.mr_id is null and mr.id LIKE concat('%',#{id},'%')
+    </select>
+
+</mapper>

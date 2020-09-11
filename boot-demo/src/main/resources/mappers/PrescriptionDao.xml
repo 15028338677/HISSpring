@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--namespace设置对应接口的全限定名，用于完成xml与dao的绑定-->
+<mapper namespace="edu.nchu.bootdemo.dao.PrescriptionDao">
+
+
+    <update id="update">
+        update prescription
+        <set>
+            <if test="amount!=null">
+                amount = #{amount},
+            </if>
+            <if test="selfPay!=null">
+                self_pay = #{selfPay},
+            </if>
+            <if test="contract!=null and contract!=''">
+                contract = #{contract},
+            </if>
+            <if test="status!=null and status!=''">
+                status = #{status},
+            </if>
+            <if test="updateTime!=null">
+                update_time = #{updateTime},
+            </if>
+            <if test="payTime!=null">
+                pay_time = #{payTime},
+            </if>
+
+        </set>
+        where pres_id = #{presId}
+    </update>
+
+
+</mapper>

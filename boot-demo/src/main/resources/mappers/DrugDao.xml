@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--namespace设置对应接口的全限定名，用于完成xml与dao的绑定-->
+<mapper namespace="edu.nchu.bootdemo.dao.DrugDao">
+
+
+    <insert id="insert">
+         insert into drug_info (
+            id,
+            drug_code,
+            drug_name,
+            unit,
+            price,
+            update_time,
+            del_flag,
+            stock
+        ) values (
+            #{id},
+            #{drugCode},
+            #{drugName},
+            #{unit},
+            #{price},
+            #{updateTime},
+            #{delFlag},
+            #{stock}
+        )
+    </insert>
+
+    <update id="update">
+        update drug_info
+        <set>
+            <if test="drugCode!=null and drugCode!=''">
+                drug_code = #{drugCode},
+            </if>
+            <if test="drugName!=null and drugName!=''">
+                drug_name = #{drugName},
+            </if>
+            <if test="stock!=null and stock!=''">
+                stock = #{stock},
+            </if>
+            <if test="unit!=null and unit!=''">
+                unit = #{unit},
+            </if>
+            <if test="price!=null and price!=0">
+                price = #{price},
+            </if>
+            <if test="updateTime!=null">
+                update_time = #{updateTime},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--    将del_flag设置为1表示删除-->
+    <delete id="delete">
+        UPDATE drug_info SET del_flag = '1' WHERE id = #{id}
+    </delete>
+
+    <select id="findById" resultType="edu.nchu.bootdemo.model.Drug">
+        SELECT
+            id,
+            drug_code,
+            drug_name,
+            unit,
+            price,
+            update_time,
+            del_flag,
+            stock
+        FROM drug_info d
+        WHERE d.id = #{id} AND d.del_flag = "0"
+    </select>
+
+    <select id="findList" resultType="edu.nchu.bootdemo.model.Drug">
+        select
+        id,
+        drug_code drugCode,
+        drug_name drugName,
+        unit,
+        price,
+        update_time updateTime,
+        del_flag delFlag,
+        stock
+        from drug_info d
+        <where>
+            <if test="drugCode!=null and drugCode!=''">
+                or d.drug_code LIKE concat('%',#{drugCode},'%')
+            </if>
+            <if test="drugName!=null and drugName!=''">
+                or d.drug_name LIKE concat('%',#{drugName},'%')
+            </if>
+            <if test="stock!=null and stock!=''">
+                stock = #{stock},
+            </if>
+            <if test="unit!=null and unit!=''">
+                or d.unit LIKE concat('%',#{unit},'%')
+            </if>
+            <if test="price!=null and price!=0">
+                or d.price = price
+            </if>
+            AND d.del_flag = "0"
+        </where>
+    </select>
+    <select id="findOne" resultType="edu.nchu.bootdemo.model.Drug">
+        select
+        id,
+        drug_code drugCode,
+        drug_name drugName,
+        unit,
+        price,
+        update_time updateTime,
+        del_flag delFlag
+        from drug_info d
+        <where>
+            <if test="drugCode!=null and drugCode!=''">
+                or d.drug_code = #{drugCode}
+            </if>
+            <if test="drugName!=null and drugName!=''">
+                or d.drug_name = #{drugName}
+            </if>
+            <if test="stock!=null and stock!=''">
+                stock = #{stock},
+            </if>
+            <if test="unit!=null and unit!=''">
+                or d.unit = #{unit}
+            </if>
+            <if test="price!=null and price!=0">
+                or d.price = price
+            </if>
+            AND d.del_flag = "0"
+        </where>
+    </select>
+</mapper>

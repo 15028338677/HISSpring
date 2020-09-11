@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--namespace设置对应接口的全限定名，用于完成xml与dao的绑定-->
+<mapper namespace="edu.nchu.bootdemo.dao.DepartmentDao">
+
+
+    <insert id="insert">
+         insert into depart_info (
+            id,
+            depart_name,
+            depart_code,
+            update_time,
+            del_flag
+        ) values (
+            #{id},
+            #{departName},
+            #{departCode},
+            #{updateTime},
+            #{delFlag}
+        )
+    </insert>
+
+    <update id="update">
+        update depart_info
+        <set>
+            <if test="departName!=null and departName!=''">
+                depart_name = #{departName},
+            </if>
+            <if test="departCode!=null and departCode!=''">
+                depart_code = #{departCode},
+            </if>
+
+            <if test="updateTime!=null">
+                update_time = #{updateTime},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--    将del_flag设置为1表示删除-->
+    <delete id="delete">
+        UPDATE depart_info SET del_flag = '1' WHERE id = #{id}
+    </delete>
+
+    <select id="findById" resultType="edu.nchu.bootdemo.model.Department">
+        SELECT
+            id,
+            depart_name,
+            depart_code,
+            update_time,
+            del_flag
+        FROM depart_info d
+        WHERE d.id = #{id} AND d.del_flag = "0"
+    </select>
+
+    <select id="findList" resultType="edu.nchu.bootdemo.model.Department">
+        select
+        id,
+        depart_name departName,
+        depart_code departCode,
+        update_time updateTime,
+        del_flag delFlag
+        from depart_info d
+        <where>
+            <if test="departName!=null and departName!=''">
+                or d.depart_name LIKE concat('%',#{departName},'%')
+            </if>
+            <if test="departCode!=null and departCode!=''">
+                or d.depart_code LIKE concat('%',#{departCode},'%')
+            </if>
+
+            AND d.del_flag = "0"
+        </where>
+    </select>
+</mapper>
